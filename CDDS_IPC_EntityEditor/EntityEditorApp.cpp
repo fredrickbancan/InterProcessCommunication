@@ -6,22 +6,28 @@
 #define RAYGUI_SUPPORT_ICONS
 #include "raygui.h"
 
+#include <iostream>
+#include "windows.h"//for named shared memory
 
-EntityEditorApp::EntityEditorApp(int screenWidth, int screenHeight) : m_screenWidth(screenWidth), m_screenHeight(screenHeight) {
-
-}
-
-EntityEditorApp::~EntityEditorApp() {
+EntityEditorApp::EntityEditorApp(int screenWidth, int screenHeight) : m_screenWidth(screenWidth), m_screenHeight(screenHeight) 
+{
 	
 }
 
-bool EntityEditorApp::Startup() {
+EntityEditorApp::~EntityEditorApp() 
+{
+	
+}
+
+bool EntityEditorApp::Startup() 
+{
 
 	InitWindow(m_screenWidth, m_screenHeight, "EntityDisplayApp");
 	SetTargetFPS(60);
 
 	srand(time(nullptr));
-	for (auto& entity : m_entities) {
+	for (auto& entity : m_entities) 
+	{
 		entity.x = rand()%m_screenWidth;
 		entity.y = rand()%m_screenHeight;
 		entity.size = 10;
@@ -31,13 +37,69 @@ bool EntityEditorApp::Startup() {
 		entity.g = rand() % 255;
 		entity.b = rand() % 255;
 	}
-	
+
+	if (!setUpEntityNSM())
+	{
+		system("PAUSE");//in case of error
+		return false;
+	}
 	return true;
 }
 
-void EntityEditorApp::Shutdown() {
+bool EntityEditorApp::setUpEntityNSM()
+{
+	//copy entities to packet struct
+	for (int i = 0; i < ENTITY_COUNT; i++)
+	{
+		packet.entities[i] = m_entities[i];
+	}
 
+	fileHandle = 
+		CreateFileMapping(INVALID_HANDLE_VALUE, // a handle to an existing virtual file, or invalid
+		nullptr, // optional security attributes
+		PAGE_READWRITE, // read/write access control
+		0, sizeof(CombinedData), // size of the memory block, space for all entities and for an int for entitiy count
+		L"Entities");
+
+	if (fileHandle == nullptr) 
+	{
+		std::cout << std::endl << "Could not create file mapping object: " << GetLastError() << std::endl;
+		return false;
+	}
+
+	std::cout << "Successfully created file mapping object!" << std::endl;
+
+	dataHandle = (CombinedData*)MapViewOfFile(fileHandle, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(CombinedData));
+
+	if (dataHandle == nullptr)
+	{
+		std::cout << std::endl << "Could not open and initialize mapped file object: " << GetLastError() << std::endl;
+		return false;
+	}
+
+	std::cout << std::endl << "Successfully wrote initial data to file mapping object!" << std::endl;
+
+	//copy packet over to virtual file
+	*dataHandle = packet;
+
+	return true;
+}
+
+void EntityEditorApp::Shutdown() 
+{
+	closeEntityNSM();
 	CloseWindow();        // Close window and OpenGL context
+}
+
+void EntityEditorApp::closeEntityNSM()
+{
+	// unmap the memory block since we're done with it
+	UnmapViewOfFile(dataHandle);
+
+	//close file handle
+	CloseHandle(fileHandle);
+
+	std::cout << "Closed Virtual file!" << std::endl;
 }
 
 void EntityEditorApp::Update(float deltaTime) {
@@ -103,13 +165,26 @@ void EntityEditorApp::Update(float deltaTime) {
 	}
 }
 
+void EntityEditorApp::updateNSM()
+{
+	//copy entities to packet struct
+	for (int i = 0; i < ENTITY_COUNT; i++)
+	{
+		packet.entities[i] = m_entities[i];
+	}
+
+	//copy packet over to virtual file
+	*dataHandle = packet;
+}
+
 void EntityEditorApp::Draw() {
 	BeginDrawing();
 
 	ClearBackground(RAYWHITE);
 
 	// draw entities
-	for (auto& entity : m_entities) {
+	for (auto& entity : m_entities) 
+	{
 		DrawRectanglePro(
 			Rectangle{ entity.x, entity.y, entity.size, entity.size }, // rectangle
 			Vector2{ entity.size / 2, entity.size / 2 }, // origin

@@ -3,6 +3,8 @@
 #include "raylib.h"
 #include "WinInc.h"
 
+enum { ENTITY_COUNT = 10 };
+
 struct Entity {
 	float x = 0, y = 0;
 	float rotation = 0;
@@ -11,24 +13,42 @@ struct Entity {
 	float size = 1;
 };
 
+struct CombinedData
+{
+	int count = ENTITY_COUNT;
+	Entity entities[ENTITY_COUNT];
+};
+
 class EntityEditorApp {
 public:
 	EntityEditorApp(int screenWidth = 800, int screenHeight = 450);
 	~EntityEditorApp();
 
 	bool Startup();
+
+	//creates and formats virtual file for named shared memory, returns false if fails.
+	bool setUpEntityNSM();
+
 	void Shutdown();
 
+	//closes named shared memory
+	void closeEntityNSM();
+
 	void Update(float deltaTime);
+
+	//updates virtual file with new data
+	void updateNSM();
+
 	void Draw();
+
 
 protected:
 	int m_screenWidth;
 	int m_screenHeight;
 
 	// define a block of entities that should be shared
-	enum { ENTITY_COUNT = 10 };
 	Entity m_entities[ENTITY_COUNT];
-
-	HANDLE h;
+	CombinedData packet = CombinedData{};
+	CombinedData* dataHandle = nullptr;//handle for writing data to the virtual file
+	HANDLE fileHandle;
 };

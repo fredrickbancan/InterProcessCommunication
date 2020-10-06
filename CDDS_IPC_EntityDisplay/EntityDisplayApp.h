@@ -17,15 +17,27 @@ public:
 	~EntityDisplayApp();
 
 	bool Startup();
+
+	//opens the already set up virtual file for reading, returns false if fails.
+	bool setUpEntityNSM();
+
 	void Shutdown();
 
+	//closes named shared memory
+	void closeEntityNSM();
+
 	void Update(float deltaTime);
+
+	//reads new data from the virtual file
+	void updateNSM();
+
 	void Draw();
 
 protected:
 	int m_screenWidth;
 	int m_screenHeight;
-
+	int entityCount = 0;
 	// an array of an unknown number of entities
 	std::vector<Entity> m_entities;
+	HANDLE fileHandle;
 };
