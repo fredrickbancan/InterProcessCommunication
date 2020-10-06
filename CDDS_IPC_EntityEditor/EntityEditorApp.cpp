@@ -7,7 +7,6 @@
 #include "raygui.h"
 
 #include <iostream>
-#include "windows.h"//for named shared memory
 
 EntityEditorApp::EntityEditorApp(int screenWidth, int screenHeight) : m_screenWidth(screenWidth), m_screenHeight(screenHeight) 
 {
@@ -48,8 +47,9 @@ bool EntityEditorApp::Startup()
 
 bool EntityEditorApp::setUpEntityNSM()
 {
+	packet.entities[0] = dummyCountEntity;
 	//copy entities to packet struct
-	for (int i = 0; i < ENTITY_COUNT; i++)
+	for (int i = 1; i < ENTITY_COUNT + 1; i++)
 	{
 		packet.entities[i] = m_entities[i];
 	}
@@ -163,6 +163,7 @@ void EntityEditorApp::Update(float deltaTime) {
 		if (m_entities[i].y < 0)
 			m_entities[i].y += m_screenHeight;
 	}
+	updateNSM();
 }
 
 void EntityEditorApp::updateNSM()
@@ -170,7 +171,7 @@ void EntityEditorApp::updateNSM()
 	//copy entities to packet struct
 	for (int i = 0; i < ENTITY_COUNT; i++)
 	{
-		packet.entities[i] = m_entities[i];
+		packet.entities[i + 1] = m_entities[i];
 	}
 
 	//copy packet over to virtual file

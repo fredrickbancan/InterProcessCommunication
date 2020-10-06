@@ -15,8 +15,8 @@ struct Entity {
 
 struct CombinedData
 {
-	int count = ENTITY_COUNT;
-	Entity entities[ENTITY_COUNT];
+//	int count = ENTITY_COUNT;
+	Entity entities[ENTITY_COUNT + 1];//plus one for dummy count entitiy
 };
 
 class EntityEditorApp {
@@ -47,7 +47,11 @@ protected:
 	int m_screenHeight;
 
 	// define a block of entities that should be shared
-	Entity m_entities[ENTITY_COUNT];
+	Entity m_entities[ENTITY_COUNT]; 
+
+	//Entity used at the start of the packet to provide a count of all entities.
+	Entity dummyCountEntity = Entity{ENTITY_COUNT};
+
 	CombinedData packet = CombinedData{};
 	CombinedData* dataHandle = nullptr;//handle for writing data to the virtual file
 	HANDLE fileHandle;

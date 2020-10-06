@@ -28,7 +28,7 @@ public:
 
 	void Update(float deltaTime);
 
-	//reads new data from the virtual file
+	//reads new data from the virtual file and applies it to the entities.
 	void updateNSM();
 
 	void Draw();
@@ -39,5 +39,6 @@ protected:
 	int entityCount = 0;
 	// an array of an unknown number of entities
 	std::vector<Entity> m_entities;
+	Entity* entityData = nullptr;//handle for reading virtual file as entity array
 	HANDLE fileHandle;
 };
